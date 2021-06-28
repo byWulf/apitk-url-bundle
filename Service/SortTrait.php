@@ -9,8 +9,6 @@ use Shopping\ApiTKCommonBundle\Exception\MissingDependencyException;
 use Shopping\ApiTKUrlBundle\Annotation as Api;
 use Shopping\ApiTKUrlBundle\Exception\SortException;
 use Shopping\ApiTKUrlBundle\Input\SortField;
-use Shopping\ApiTKUrlBundle\Util\RequestUtil;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -37,6 +35,20 @@ trait SortTrait
      * @var Api\Sort[]
      */
     private $sorts = [];
+
+    /**
+     * @var RequestService
+     */
+    private $requestService;
+
+    /**
+     * SortTrait constructor.
+     * @param RequestService $requestService
+     */
+    public function __construct(RequestService $requestService)
+    {
+        $this->requestService = $requestService;
+    }
 
     /**
      * Checks if only allowed sort fields were given in the request. Will be called by the event listener.
@@ -112,7 +124,7 @@ trait SortTrait
     {
         $this->sortFields = [];
 
-        $request = RequestUtil::getMainRequest($this->requestStack) ?? Request::createFromGlobals();
+        $request = $this->requestService->getMainRequest($this->requestStack);
 
         if (Kernel::VERSION_ID >= 50100) {
             $requestSorts = $request->query->all('sort');

@@ -10,8 +10,6 @@ use Shopping\ApiTKCommonBundle\Exception\MissingDependencyException;
 use Shopping\ApiTKHeaderBundle\Service\HeaderInformation;
 use Shopping\ApiTKUrlBundle\Annotation as Api;
 use Shopping\ApiTKUrlBundle\Exception\PaginationException;
-use Shopping\ApiTKUrlBundle\Util\RequestUtil;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -52,6 +50,21 @@ trait PaginationTrait
      * @var int
      */
     private $paginationTotal;
+
+    /**
+     * @var RequestService
+     */
+    private $requestService;
+
+    /**
+     * PaginationTrait constructor.
+     *
+     * @param RequestService $requestService
+     */
+    public function __construct(RequestService $requestService)
+    {
+        $this->requestService = $requestService;
+    }
 
     /**
      * Checks if only allowed sort fields were given in the request. Will be called by the event listener.
@@ -104,7 +117,7 @@ trait PaginationTrait
      */
     private function parsePagination(): void
     {
-        $request = RequestUtil::getMainRequest($this->requestStack) ?? Request::createFromGlobals();
+        $request = $this->requestService->getMainRequest($this->requestStack);
         $parameter = $request->query->get('limit', null);
 
         if ($parameter !== null) {

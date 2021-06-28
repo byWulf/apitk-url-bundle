@@ -9,8 +9,6 @@ use Shopping\ApiTKCommonBundle\Exception\MissingDependencyException;
 use Shopping\ApiTKUrlBundle\Annotation as Api;
 use Shopping\ApiTKUrlBundle\Exception\FilterException;
 use Shopping\ApiTKUrlBundle\Input\FilterField;
-use Shopping\ApiTKUrlBundle\Util\RequestUtil;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Kernel;
 
@@ -37,6 +35,21 @@ trait FilterTrait
      * @var RequestStack
      */
     private $requestStack;
+
+    /**
+     * @var RequestService
+     */
+    private $requestService;
+
+    /**
+     * FilterTrait constructor.
+     *
+     * @param RequestService $requestService
+     */
+    public function __construct(RequestService $requestService)
+    {
+        $this->requestService = $requestService;
+    }
 
     /**
      * Checks if only allowed filter fields were given in the request. Will be called by the event listener.
@@ -171,7 +184,7 @@ trait FilterTrait
      */
     private function loadFiltersFromQuery(): void
     {
-        $request = RequestUtil::getMainRequest($this->requestStack) ?? Request::createFromGlobals();
+        $request = $this->requestService->getMainRequest($this->requestStack);
 
         if (Kernel::VERSION_ID >= 50100) {
             $requestFilters = $request->query->all('filter');
@@ -199,7 +212,7 @@ trait FilterTrait
      */
     private function loadFiltersFromAttributes(): void
     {
-        $request = RequestUtil::getMainRequest($this->requestStack) ?? Request::createFromGlobals();
+        $request = $this->requestService->getMainRequest($this->requestStack);
         foreach ($request->attributes->getIterator() as $key => $value) {
             $key = (string) $key;
             if ($this->getFilterByName($key) === null) {
